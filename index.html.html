@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1b100d">
+  <title>Missão 01 — Museu do Chocolate</title>
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <style>
+    :root {
+      --ink: #fff7e8;
+      --muted: #cbb9a5;
+      --gold: #e9b85e;
+      --gold-light: #ffdc91;
+      --brown: #261712;
+      --panel: rgba(34, 21, 16, .91);
+      --line: rgba(239, 196, 117, .25);
+      --green: #75c69a;
+      --red: #f18a78;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #170f0c; color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    button { font: inherit; }
+    #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+    .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 53% 48%, transparent 30%, rgba(18,9,6,.24) 78%, rgba(18,9,6,.6)); }
+    .topbar { position: fixed; z-index: 2; inset: 0 0 auto; height: 72px; display:flex; align-items:center; justify-content:space-between; padding: 0 32px; border-bottom:1px solid rgba(255,255,255,.1); background:linear-gradient(180deg,rgba(23,13,10,.92),rgba(23,13,10,.52)); }
+    .brand { display:flex; align-items:center; gap:12px; letter-spacing:.12em; font-size:11px; font-weight:800; color:#f5dfb8; }
+    .brand-mark { display:grid; place-items:center; width:34px; height:34px; border:1px solid var(--gold); border-radius:10px 10px 10px 3px; color:var(--gold-light); font-size:18px; letter-spacing:0; }
+    .top-right { display:flex; align-items:center; gap:18px; color:var(--muted); font-size:11px; letter-spacing:.13em; text-transform:uppercase; }
+    .status-pill { border:1px solid var(--line); border-radius:30px; padding:9px 13px; color:#ffe2a6; background:rgba(71,45,24,.42); }
+    .layout { position:fixed; z-index:1; inset:92px 30px 28px; display:grid; grid-template-columns:minmax(290px,370px) 1fr; gap:18px; pointer-events:none; }
+    .left-column { display:flex; flex-direction:column; gap:14px; pointer-events:auto; max-height:100%; }
+    .panel { border:1px solid var(--line); background:var(--panel); backdrop-filter:blur(14px); box-shadow:0 18px 60px rgba(0,0,0,.27); border-radius:18px; }
+    .brief { padding:24px 24px 20px; }
+    .eyebrow { color:var(--gold); font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    h1 { margin:11px 0 10px; font-family:Georgia,"Times New Roman",serif; font-size:clamp(25px,2.4vw,34px); line-height:1.06; font-weight:500; letter-spacing:-.025em; }
+    .intro { color:#e1d1bd; font-size:13px; line-height:1.62; margin:0; }
+    .divider { height:1px; background:var(--line); margin:18px 0; }
+    .mission-heading { display:flex; align-items:center; gap:11px; margin-bottom:10px; }
+    .mission-number { display:grid; place-items:center; width:34px; height:34px; flex:0 0 34px; border-radius:10px; background:rgba(233,184,94,.14); border:1px solid rgba(233,184,94,.38); color:var(--gold-light); font-family:Georgia,serif; font-size:18px; }
+    h2 { margin:0; font-size:15px; font-weight:700; }
+    .mission-copy { color:#d8c5ad; font-size:12px; line-height:1.55; margin:0; }
+    .mission-copy strong { color:#fff0d0; }
+    .tip { display:flex; gap:10px; align-items:flex-start; padding:11px 12px; border:1px solid rgba(255,255,255,.09); border-radius:12px; background:rgba(255,255,255,.035); margin-top:14px; color:#cdbba6; font-size:11px; line-height:1.45; }
+    .tip span { color:var(--gold-light); font-size:14px; }
+    .controls { margin-top:auto; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; color:#cdbba6; font-size:10px; }
+    .key { display:inline-grid; place-items:center; min-width:25px; height:24px; margin-right:4px; padding:0 6px; border:1px solid rgba(255,255,255,.2); border-radius:6px; background:rgba(255,255,255,.06); color:#f4e6d4; font-size:10px; }
+    .right-column { display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; min-width:0; pointer-events:none; }
+    .scene-tag { align-self:flex-end; margin-top:14px; padding:10px 13px; border-radius:12px; border:1px solid rgba(245,208,147,.27); color:#f4dba9; background:rgba(35,20,14,.72); backdrop-filter:blur(8px); font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+    .question { width:min(490px,100%); padding:20px; pointer-events:auto; }
+    .question-top { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:9px; }
+    .question-label { color:var(--gold); text-transform:uppercase; letter-spacing:.15em; font-size:9px; font-weight:800; }
+    .progress { color:#bca991; font-size:10px; }
+    .question h3 { margin:0 0 7px; font-family:Georgia,serif; font-size:20px; font-weight:500; }
+    .question p { margin:0 0 15px; color:#d1c0ad; line-height:1.45; font-size:12px; }
+    .answers { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .answer { min-height:46px; border:1px solid rgba(239,196,117,.42); border-radius:11px; color:#fff0d0; background:rgba(183,117,49,.13); font-size:12px; font-weight:750; cursor:pointer; transition:transform .16s, background .16s, border-color .16s; }
+    .answer:hover { transform:translateY(-2px); border-color:var(--gold); background:rgba(183,117,49,.28); }
+    .answer:focus-visible, .modal-button:focus-visible { outline:3px solid #ffdc91; outline-offset:3px; }
+    .answer.secondary { border-color:rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:#eee0ce; }
+    .answer.secondary:hover { background:rgba(255,255,255,.11); }
+    .no-data { margin-top:12px; text-align:center; color:#a9957f; font-size:9px; letter-spacing:.04em; }
+    .modal-backdrop { position:fixed; z-index:5; inset:0; display:none; place-items:center; padding:20px; background:rgba(13,7,5,.76); backdrop-filter:blur(7px); }
+    .modal-backdrop.open { display:grid; }
+    .feedback { width:min(600px,100%); max-height:min(88vh,780px); overflow:auto; padding:28px; border-radius:20px; border:1px solid var(--line); background:linear-gradient(145deg,#352117,#20130f 70%); box-shadow:0 24px 100px rgba(0,0,0,.55); }
+    .feedback-symbol { display:grid; place-items:center; width:44px; height:44px; border-radius:14px; margin-bottom:14px; font-size:22px; background:rgba(117,198,154,.13); border:1px solid rgba(117,198,154,.35); color:var(--green); }
+    .feedback.wrong .feedback-symbol { color:var(--red); background:rgba(241,138,120,.12); border-color:rgba(241,138,120,.33); }
+    .feedback h2 { font-family:Georgia,serif; font-size:26px; font-weight:500; margin:0 0 9px; }
+    .feedback-lead { color:#e2d1be; font-size:13px; line-height:1.55; margin:0 0 16px; }
+    .law-box { padding:16px; border-left:3px solid var(--gold); border-radius:0 11px 11px 0; background:rgba(255,255,255,.055); }
+    .law-label { display:block; color:var(--gold-light); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:8px; }
+    blockquote { margin:0; color:#f4e8d8; font-family:Georgia,serif; font-size:14px; line-height:1.58; }
+    .explain { margin:14px 0 0; color:#cbb9a5; font-size:12px; line-height:1.6; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+    .modal-button { min-height:42px; padding:0 16px; border-radius:10px; border:1px solid var(--line); background:rgba(233,184,94,.16); color:#ffe7b7; font-size:12px; font-weight:750; cursor:pointer; }
+    .modal-button:hover { background:rgba(233,184,94,.27); }
+    .footer-note { position:fixed; z-index:2; right:30px; top:83px; color:rgba(255,239,216,.63); font-size:9px; letter-spacing:.08em; text-transform:uppercase; pointer-events:none; }
+    @media (max-width:760px) {
+      .topbar { height:58px; padding:0 15px; }
+      .brand { font-size:9px; gap:8px; }
+      .brand-mark { width:29px; height:29px; }
+      .top-right { gap:7px; font-size:8px; }
+      .status-pill { padding:7px 9px; }
+      .layout { inset:72px 12px 12px; display:flex; flex-direction:column; gap:10px; }
+      .left-column { gap:9px; max-height:none; overflow:auto; }
+      .brief { padding:15px 16px; }
+      h1 { margin:7px 0; font-size:25px; }
+      .intro { font-size:11px; line-height:1.45; }
+      .divider { margin:10px 0; }
+      .mission-heading { margin-bottom:6px; }
+      .mission-copy { font-size:10px; line-height:1.4; }
+      .tip { display:none; }
+      .controls { display:none; }
+      .right-column { margin-top:auto; }
+      .scene-tag { display:none; }
+      .question { padding:15px; }
+      .question h3 { font-size:17px; }
+      .question p { font-size:11px; margin-bottom:11px; }
+      .answer { min-height:42px; }
+      .footer-note { display:none; }
+      .feedback { padding:21px; }
+      .feedback h2 { font-size:23px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-label="Ambiente 3D ilustrado de um museu do chocolate"></canvas>
+  <div class="vignette"></div>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">✦</div><span>OPERAÇÃO CACAU<br>SEGURANÇA EM MISSÃO</span></div>
+    <div class="top-right"><span>Centro de treinamento</span><span class="status-pill">Missão 01 / 01</span></div>
+  </header>
+  <div class="footer-note">Cenário didático • Museu do Chocolate</div>
+
+  <main class="layout">
+    <section class="left-column" aria-label="Apresentação da missão">
+      <article class="panel brief">
+        <div class="eyebrow">Chamado da equipe de segurança</div>
+        <h1>Caro(a) Técnico(a),<br>bem-vindo(a) à missão.</h1>
+        <p class="intro">Você foi contratado(a) para avaliar a aplicação da NR 12 em uma fábrica de chocolate. Observe os ambientes, investigue as máquinas e cumpra as missões de segurança.</p>
+        <div class="divider"></div>
+        <div class="mission-heading"><div class="mission-number">01</div><h2>Museu do Chocolate</h2></div>
+        <p class="mission-copy">Esta sala conta a história do cacau e da produção de chocolate no Brasil. As máquinas antigas estão expostas como parte do acervo histórico e <strong>não são mais usadas para fins produtivos</strong>. A exposição também adota medidas para proteger a integridade física dos visitantes e expositores. Observe a sala e decida: a NR 12 se aplica a essas máquinas neste ambiente?</p>
+        <div class="tip"><span>◈</span><div>Explore a sala arrastando o mouse. Procure as máquinas expostas antes de responder.</div></div>
+      </article>
+      <div class="panel controls"><span><span class="key">ARRASTE</span> para observar a sala</span><span><span class="key">SCROLL</span> para aproximar</span></div>
+    </section>
+    <section class="right-column" aria-label="Pergunta da missão">
+      <div class="scene-tag">Área 01&nbsp; · &nbsp;Acervo histórico</div>
+      <article class="panel question">
+        <div class="question-top"><span class="question-label">Decisão do técnico</span><span class="progress">Responda para concluir a missão</span></div>
+        <h3>A NR 12 se aplica às máquinas expostas?</h3>
+        <p>Considere que são máquinas antigas, expostas para fins históricos, fora de uso produtivo e protegidas para garantir a integridade dos visitantes e expositores.</p>
+        <div class="answers">
+          <button class="answer" id="yesBtn" type="button">Sim, aplica-se</button>
+          <button class="answer secondary" id="noBtn" type="button">Não se aplica</button>
+        </div>
+        <div class="no-data">Atividade demonstrativa · Nenhuma resposta é enviada ou armazenada</div>
+      </article>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+    <section class="feedback" id="feedbackCard">
+      <div class="feedback-symbol" id="feedbackSymbol">✓</div>
+      <h2 id="feedbackTitle">Resposta</h2>
+      <p class="feedback-lead" id="feedbackLead"></p>
+      <div class="law-box">
+        <span class="law-label">NR 12 · item 12.1.4, alínea “b”</span>
+        <blockquote>“Esta NR não se aplica [...] às máquinas e equipamentos expostos em museus, feiras e eventos, para fins históricos ou que sejam considerados como antiguidades e não sejam mais empregados com fins produtivos, desde que sejam adotadas medidas que garantam a preservação da integridade física dos visitantes e expositores.”</blockquote>
+      </div>
+      <p class="explain" id="explanation"></p>
+      <div class="modal-actions"><button class="modal-button" id="closeModal" type="button">Voltar à missão</button></div>
+    </section>
+  </div>
+
+  <script>
+    // Museu 3D estilizado construído com Babylon.js; as respostas ficam apenas nesta página.
+    (() => {
+      const canvas = document.getElementById('scene');
+      if (!window.BABYLON) {
+        document.body.classList.add('no-3d');
+        return;
+      }
+      const engine = new BABYLON.Engine(canvas, true, { antialias: true, preserveDrawingBuffer: true, stencil: true });
+      const scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0.12, 0.075, 0.052, 1);
+
+      const camera = new BABYLON.ArcRotateCamera('camera', -Math.PI / 2.15, 1.05, 15.5, new BABYLON.Vector3(0, 1.25, 0), scene);
+      camera.lowerRadiusLimit = 10;
+      camera.upperRadiusLimit = 19;
+      camera.lowerBetaLimit = 0.72;
+      camera.upperBetaLimit = 1.28;
+      camera.wheelPrecision = 42;
+      camera.panningSensibility = 0;
+      camera.attachControl(canvas, true);
+
+      const hemi = new BABYLON.HemisphericLight('warm ambient', new BABYLON.Vector3(0, 1, 0), scene);
+      hemi.intensity = 0.82;
+      hemi.diffuse = new BABYLON.Color3(1, 0.82, 0.62);
+      const key = new BABYLON.DirectionalLight('museum light', new BABYLON.Vector3(-0.45, -1, 0.38), scene);
+      key.position = new BABYLON.Vector3(5, 9, -4);
+      key.intensity = 1.05;
+
+      const mat = (name, color, roughness = 0.75) => {
+        const m = new BABYLON.StandardMaterial(name, scene);
+        m.diffuseColor = BABYLON.Color3.FromHexString(color);
+        m.specularColor = new BABYLON.Color3(0.15, 0.12, 0.1);
+        m.specularPower = 45;
+        return m;
+      };
+      const floorMat = mat('warm stone', '#9b7958');
+      const wallMat = mat('cocoa plaster', '#684331');
+      const trimMat = mat('dark walnut', '#39231b');
+      const goldMat = mat('aged brass', '#c59a55');
+      const glassMat = mat('display glass', '#b5d2ce');
+      glassMat.alpha = 0.16;
+      glassMat.specularColor = new BABYLON.Color3(0.9, 0.85, 0.7);
+      const machineDark = mat('machine enamel', '#354044');
+      const machineCream = mat('old ivory enamel', '#d8c6a2');
+      const copper = mat('copper details', '#a96c3d');
+      const cocoa = mat('cocoa brown', '#4a2a20');
+
+      const box = (name, x, y, z, sx, sy, sz, material, opts = {}) => {
+        const mesh = BABYLON.MeshBuilder.CreateBox(name, { width: sx, height: sy, depth: sz }, scene);
+        mesh.position.set(x, y, z);
+        mesh.material = material;
+        if (opts.rotationY) mesh.rotation.y = opts.rotationY;
+        return mesh;
+      };
+      const cylinder = (name, x, y, z, diameter, height, material, rotation = null) => {
+        const mesh = BABYLON.MeshBuilder.CreateCylinder(name, { diameter, height, tessellation: 24 }, scene);
+        mesh.position.set(x, y, z);
+        mesh.material = material;
+        if (rotation) mesh.rotation = rotation;
+        return mesh;
+      };
+      const sphere = (name, x, y, z, diameter, material) => {
+        const mesh = BABYLON.MeshBuilder.CreateSphere(name, { diameter, segments: 16 }, scene);
+        mesh.position.set(x, y, z);
+        mesh.material = material;
+        return mesh;
+      };
+
+      // Sala retangular, piso de pedra e paredes quentes de madeira e cacau.
+      box('museum floor', 0, -0.13, 0, 17, 0.25, 12, floorMat);
+      box('back wall', 0, 2.7, -5.95, 17, 5.6, 0.28, wallMat);
+      box('left wall', -8.35, 2.7, 0, 0.28, 5.6, 12, wallMat);
+      box('right wall', 8.35, 2.7, 0, 0.28, 5.6, 12, wallMat);
+      box('back skirting', 0, 0.18, -5.74, 16.7, 0.28, 0.16, trimMat);
+      box('left skirting', -8.17, 0.18, 0, 0.16, 0.28, 11.7, trimMat);
+      box('right skirting', 8.17, 0.18, 0, 0.16, 0.28, 11.7, trimMat);
+      // Molduras verticais e faixa de madeira para dar profundidade à sala.
+      for (let x = -7.6; x <= 7.6; x += 2.5) box('wall molding', x, 2.65, -5.76, 0.055, 4.9, 0.06, goldMat);
+      box('upper frieze', 0, 5.05, -5.74, 16.7, 0.12, 0.12, trimMat);
+      box('lower frieze', 0, 0.45, -5.74, 16.7, 0.09, 0.12, trimMat);
+
+      // Painel de parede e placa de entrada.
+      box('history panel', 0, 3.05, -5.69, 4.8, 1.55, 0.11, trimMat);
+      box('history panel inset', 0, 3.05, -5.60, 4.55, 1.31, 0.035, goldMat);
+      box('history panel center', 0, 3.05, -5.57, 4.36, 1.13, 0.035, wallMat);
+      // Ilustração simples de frutos de cacau no painel.
+      for (let i = 0; i < 5; i++) {
+        sphere('cocoa pod', -1.55 + i * 0.77, 3.0 + (i % 2) * 0.15, -5.48, 0.38, i % 2 ? copper : cocoa);
+        box('pod stem', -1.55 + i * 0.77, 3.26 + (i % 2) * 0.15, -5.48, 0.07, 0.24, 0.07, goldMat, { rotationY: 0.25 });
+      }
+      // Letreiro em textura dinâmica para não depender de arquivos de imagem externos.
+      const sign = BABYLON.MeshBuilder.CreatePlane('museum sign', { width: 4.0, height: 0.42 }, scene);
+      sign.position.set(0, 4.15, -5.47);
+      const signTexture = new BABYLON.DynamicTexture('museum sign text', { width: 1024, height: 128 }, scene, true);
+      signTexture.hasAlpha = true;
+      signTexture.drawText('MUSEU DO CHOCOLATE', null, 88, 'bold 64px Georgia', '#ffe0a0', 'transparent', true);
+      const signMat = new BABYLON.StandardMaterial('sign text material', scene);
+      signMat.diffuseTexture = signTexture;
+      signMat.emissiveColor = new BABYLON.Color3(0.75, 0.5, 0.2);
+      signMat.backFaceCulling = false;
+      sign.material = signMat;
+
+      // Três vitrines com antigas máquinas estilizadas.
+      function displayCase(cx, title, type) {
+        const z = -0.4;
+        box('display plinth', cx, 0.38, z, 3.2, 0.58, 2.35, trimMat);
+        box('plinth brass top', cx, 0.69, z, 3.12, 0.08, 2.27, goldMat);
+        // Visor de vidro sugerido por postes e uma cobertura translúcida.
+        box('glass case top', cx, 2.15, z, 3.05, 0.045, 2.18, glassMat);
+        for (const dx of [-1.48, 1.48]) for (const dz of [-1.04, 1.04]) box('glass case post', cx + dx, 1.42, z + dz, 0.045, 1.42, 0.045, glassMat);
+        box('display title plate', cx, 0.79, z + 1.2, 1.72, 0.22, 0.055, goldMat);
+        if (type === 'grinder') {
+          box('grinder body', cx, 1.25, z, 1.35, 0.85, 0.78, machineDark);
+          box('grinder front panel', cx, 1.26, z + 0.42, 0.92, 0.54, 0.08, machineCream);
+          cylinder('grinder wheel', cx - 0.48, 1.26, z + 0.50, 0.48, 0.12, copper, new BABYLON.Vector3(Math.PI / 2, 0, 0));
+          cylinder('grinder axle', cx - 0.48, 1.26, z + 0.58, 0.12, 0.06, goldMat, new BABYLON.Vector3(Math.PI / 2, 0, 0));
+          box('hopper base', cx, 1.82, z - 0.02, 0.72, 0.2, 0.6, copper);
+          const hopper = BABYLON.MeshBuilder.CreateCylinder('grinder hopper', { diameterTop: 0.34, diameterBottom: 0.9, height: 0.56, tessellation: 4 }, scene);
+          hopper.position.set(cx, 2.12, z - 0.02); hopper.material = machineCream; hopper.rotation.y = Math.PI / 4;
+          for (const dx of [-0.45, 0.45]) cylinder('grinder foot', cx + dx, 0.91, z - 0.12, 0.12, 0.3, goldMat);
+        } else if (type === 'roller') {
+          box('roller stand', cx, 1.1, z, 1.75, 0.58, 0.72, machineCream);
+          for (let i = 0; i < 3; i++) cylinder('chocolate roller', cx - 0.52 + i * 0.52, 1.65, z + 0.04, 0.42, 0.76, i === 1 ? copper : machineDark, new BABYLON.Vector3(0, 0, Math.PI / 2));
+          box('roller top bar', cx, 1.98, z, 1.75, 0.12, 0.76, machineDark);
+          for (const dx of [-0.66, 0.66]) cylinder('roller knob', cx + dx, 1.5, z + 0.48, 0.13, 0.12, goldMat, new BABYLON.Vector3(Math.PI / 2, 0, 0));
+        } else {
+          box('old mixer base', cx, 1.02, z, 1.45, 0.34, 0.9, machineDark);
+          cylinder('mixing bowl', cx, 1.45, z, 1.0, 0.68, machineCream);
+          cylinder('bowl rim', cx, 1.8, z, 1.12, 0.09, goldMat);
+          box('mixer arm', cx, 2.02, z - 0.05, 0.16, 0.6, 0.16, copper, { rotationY: 0.24 });
+          cylinder('mixer motor', cx, 2.35, z - 0.05, 0.52, 0.37, machineDark);
+        }
+        // Identificação histórica abaixo da vitrine.
+        const plaque = BABYLON.MeshBuilder.CreatePlane('exhibit plaque', { width: 1.65, height: 0.22 }, scene);
+        plaque.position.set(cx, 0.79, z + 1.235);
+        const tex = new BABYLON.DynamicTexture('plaque text ' + title, { width: 700, height: 100 }, scene, true);
+        tex.hasAlpha = true;
+        tex.drawText(title, null, 68, 'bold 44px Arial', '#fff0cf', 'transparent', true);
+        const pmat = new BABYLON.StandardMaterial('plaque mat ' + title, scene);
+        pmat.diffuseTexture = tex; pmat.emissiveColor = new BABYLON.Color3(0.8, 0.72, 0.58); pmat.backFaceCulling = false;
+        plaque.material = pmat;
+      }
+      displayCase(-5.2, 'MOAGEM · 1930', 'grinder');
+      displayCase(0, 'CILINDROS · 1940', 'roller');
+      displayCase(5.2, 'MISTURA · 1950', 'mixer');
+
+      // Pequenas luminárias suspensas, sem textura externa.
+      for (const x of [-5.2, 0, 5.2]) {
+        cylinder('lamp stem', x, 4.1, -0.1, 0.045, 1.35, trimMat);
+        const lamp = BABYLON.MeshBuilder.CreateSphere('warm lamp', { diameter: 0.34, segments: 12 }, scene);
+        lamp.position.set(x, 3.42, -0.1);
+        const lampMat = new BABYLON.StandardMaterial('lamp glow', scene);
+        lampMat.emissiveColor = new BABYLON.Color3(1, 0.62, 0.25);
+        lamp.material = lampMat;
+        const point = new BABYLON.PointLight('spot ' + x, new BABYLON.Vector3(x, 3.35, -0.1), scene);
+        point.diffuse = new BABYLON.Color3(1, 0.69, 0.36); point.intensity = 0.38; point.range = 7;
+      }
+
+      engine.runRenderLoop(() => scene.render());
+      window.addEventListener('resize', () => engine.resize());
+
+      // Feedback didático: nada é enviado ou salvo; a escolha só altera esta tela.
+      const modal = document.getElementById('feedbackModal');
+      const card = document.getElementById('feedbackCard');
+      const title = document.getElementById('feedbackTitle');
+      const lead = document.getElementById('feedbackLead');
+      const explanation = document.getElementById('explanation');
+      const symbol = document.getElementById('feedbackSymbol');
+      function showFeedback(correct) {
+        card.classList.toggle('wrong', !correct);
+        symbol.textContent = correct ? '✓' : '↺';
+        title.textContent = correct ? 'Missão concluída!' : 'Você errou. Volte e leia o item 12.1.4.';
+        lead.textContent = correct
+          ? 'Parabéns! Para este cenário, a resposta é não: a NR 12 não se aplica às máquinas do acervo histórico, desde que as condições da exceção estejam atendidas.'
+          : 'A resposta correta é não. Volte ao enunciado e releia o item 12.1.4 da NR 12, que trata das máquinas expostas em museus para fins históricos.';
+        explanation.textContent = 'Nesta missão, as máquinas são antigas, estão expostas com finalidade histórica e não são mais usadas para produção. A exceção da NR 12 também condiciona essa situação à adoção de medidas que protejam a integridade física de visitantes e expositores. Isso não significa que riscos no espaço devam ser ignorados.';
+        modal.classList.add('open');
+        document.getElementById('closeModal').focus();
+      }
+      document.getElementById('yesBtn').addEventListener('click', () => showFeedback(false));
+      document.getElementById('noBtn').addEventListener('click', () => showFeedback(true));
+      document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('open'));
+      modal.addEventListener('click', (event) => { if (event.target === modal) modal.classList.remove('open'); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') modal.classList.remove('open'); });
+    })();
+  </script>
+</body>
+</html>
